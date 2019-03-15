@@ -1,0 +1,21 @@
+{
+  "name": "aws-cost",
+  "version": "1.0.0",
+  "description": "Provides visiblity on AWS costs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [
+    "aws"
+  ],
+  "author": "neisha",
+  "license": "None",
+  "dependencies": {
+    "@slack/client": "^4.11.0",
+    "aws-cost-explorer": "^0.1.1",
+    "aws-sdk": "^2.395.0",
+    "js-currency-converter": "^2.0.0",
+    "request": "^2.88.0"
+  }
+}

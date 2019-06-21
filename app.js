@@ -1,5 +1,5 @@
 var AWS = require("aws-sdk");
-var request = require("request");
+const axios = require("axios");
 var moment = require("moment");
 const { WebClient } = require("@slack/web-api");
 
@@ -13,17 +13,29 @@ var awsCredentials = environments.awsKeys;
 var accountNameLookup = [];
 var accountCosts = {};
 
+var todaysConversionRate = 0;
+
+const getTodaysConversionRate = async () => {
+  console.log("gathering exchange rates...");
+  const todaysRates = await axios.get(
+    "https://api.exchangeratesapi.io/latest?base=USD"
+  );
+  console.log("todays rate", todaysRates.data.rates.AUD);
+  todaysConversionRate = todaysRates.data.rates.AUD;
+  return todaysRates;
+};
+
 const getCostsAndSendToSlack = async awsCredentials => {
-  var message = "";
+  await getTodaysConversionRate();
   for (var i = 0; i < awsCredentials.length; i++) {
     var cred = awsCredentials[i];
     console.log("processing", cred.environment, "...");
     accountNameLookup[cred.accountNumber] = cred.environment;
     accountCosts[cred.environment] = {};
+
     var costs = await getCosts(cred.accessKeyId, cred.secretAccessKey);
-    message += generateSlackMessage(costs) + "\n\n";
   }
-  sendToSlack(message);
+  sendToSlack(generateSlackMessage(costs) + "\n\n");
 };
 
 const getCosts = async (accessKeyId, secretAccessKey) => {
@@ -204,9 +216,9 @@ const generateSlackMessage = accountCosts => {
     }
     message += `*${accountName}*\n`;
     Object.keys(accountAggregate).forEach(costType => {
-      message += `${costType}: ${accountAggregate[costType].Amount} ${
-        accountAggregate[costType].Unit
-      }\n`;
+      message += `${costType}: ${(
+        accountAggregate[costType].Amount * todaysConversionRate
+      ).toFixed(2)} AUD\n`;
     });
   });
   return message;

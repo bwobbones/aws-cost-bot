@@ -15,6 +15,7 @@
     "@slack/web-api": "5.0.1",
     "aws-cost-explorer": "0.1.1",
     "aws-sdk": "2.395.0",
+    "axios": "^0.19.0",
     "js-currency-converter": "2.0.0",
     "request": "2.88.0"
   }

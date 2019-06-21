@@ -1,31 +1,25 @@
-var AWS = require("aws-sdk");
+const AWS = require("aws-sdk");
+const S3 = require("aws-sdk/clients/s3");
 const axios = require("axios");
-var moment = require("moment");
+const moment = require("moment");
 const { WebClient } = require("@slack/web-api");
-
-const environments = require("./environments.json");
-
-const token = environments.slackKey;
-const web = new WebClient(token);
-
-var awsCredentials = environments.awsKeys;
 
 var accountNameLookup = [];
 var accountCosts = {};
 
 var todaysConversionRate = 0;
 
-const getTodaysConversionRate = async () => {
-  console.log("gathering exchange rates...");
-  const todaysRates = await axios.get(
-    "https://api.exchangeratesapi.io/latest?base=USD"
-  );
-  console.log("todays rate", todaysRates.data.rates.AUD);
-  todaysConversionRate = todaysRates.data.rates.AUD;
-  return todaysRates;
-};
+// AWS.config.update({
+//   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+//   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+// });
 
-const getCostsAndSendToSlack = async awsCredentials => {
+exports.handler = async (event, context) => {
+  //eslint-disable-line
+
+  const environments = await getEnvironments();
+  var awsCredentials = environments.awsKeys;
+  const token = environments.slackKey;
   await getTodaysConversionRate();
   for (var i = 0; i < awsCredentials.length; i++) {
     var cred = awsCredentials[i];
@@ -35,7 +29,32 @@ const getCostsAndSendToSlack = async awsCredentials => {
 
     var costs = await getCosts(cred.accessKeyId, cred.secretAccessKey);
   }
-  sendToSlack(generateSlackMessage(costs) + "\n\n");
+  sendToSlack(generateSlackMessage(costs) + "\n\n", token);
+  context.done(null, "All done");
+};
+
+const getEnvironments = async () => {
+  const client = new S3({
+    apiVersion: "2006-03-01"
+  });
+
+  const params = {
+    Bucket: "generalresourceful",
+    Key: "environments.json"
+  };
+  const environmentsFile = await client.getObject(params).promise();
+  console.log(environmentsFile.Body.toString());
+  return JSON.parse(environmentsFile.Body.toString());
+};
+
+const getTodaysConversionRate = async () => {
+  console.log("gathering exchange rates...");
+  const todaysRates = await axios.get(
+    "https://api.exchangeratesapi.io/latest?base=USD"
+  );
+  console.log("todays rate", todaysRates.data.rates.AUD);
+  todaysConversionRate = todaysRates.data.rates.AUD;
+  return todaysRates;
 };
 
 const getCosts = async (accessKeyId, secretAccessKey) => {
@@ -192,8 +211,9 @@ const trimEmptyCosts = accountCosts => {
   });
 };
 
-const sendToSlack = async message => {
+const sendToSlack = async (message, token) => {
   try {
+    const web = new WebClient(token);
     await web.chat.postMessage({
       channel: "aws-costs",
       text: message,
@@ -223,5 +243,3 @@ const generateSlackMessage = accountCosts => {
   });
   return message;
 };
-
-getCostsAndSendToSlack(awsCredentials);

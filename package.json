@@ -12,10 +12,10 @@
   "author": "neisha",
   "license": "None",
   "dependencies": {
-    "@slack/client": "^4.11.0",
-    "aws-cost-explorer": "^0.1.1",
-    "aws-sdk": "^2.395.0",
-    "js-currency-converter": "^2.0.0",
-    "request": "^2.88.0"
+    "@slack/web-api": "5.0.1",
+    "aws-cost-explorer": "0.1.1",
+    "aws-sdk": "2.395.0",
+    "js-currency-converter": "2.0.0",
+    "request": "2.88.0"
   }
 }

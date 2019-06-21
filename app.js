@@ -1,22 +1,25 @@
 var AWS = require("aws-sdk");
 var request = require("request");
 var moment = require("moment");
+const { WebClient } = require("@slack/web-api");
 
 const environments = require("./environments.json");
 
-const { WebClient } = require("@slack/client");
-const web = new WebClient(
-  environments.slackKey
-);
+const token = environments.slackKey;
+const web = new WebClient(token);
 
-// TODO: put these into a config file
 var awsCredentials = environments.awsKeys;
+
+var accountNameLookup = [];
+var accountCosts = {};
 
 const getCostsAndSendToSlack = async awsCredentials => {
   var message = "";
   for (var i = 0; i < awsCredentials.length; i++) {
     var cred = awsCredentials[i];
-    message += `### ${cred.environment} ###\n`;
+    console.log("processing", cred.environment, "...");
+    accountNameLookup[cred.accountNumber] = cred.environment;
+    accountCosts[cred.environment] = {};
     var costs = await getCosts(cred.accessKeyId, cred.secretAccessKey);
     message += generateSlackMessage(costs) + "\n\n";
   }
@@ -32,23 +35,13 @@ const getCosts = async (accessKeyId, secretAccessKey) => {
   };
 
   var costexplorer = new AWS.CostExplorer(config);
-  var orgs = new AWS.Organizations(config);
 
-  var costAggregate = await fetchAndProcessCosts(costexplorer, orgs);
-  console.log("costagg", costAggregate);
+  var costAggregate = await fetchAndProcessCosts(costexplorer);
   trimEmptyCosts(costAggregate);
   return costAggregate;
 };
 
-const fetchAndProcessCosts = async (costexplorer, orgs) => {
-  var accountResult = await orgs.listAccounts().promise();
-  var accountNameLookup = [];
-  var accountCosts = {};
-  accountResult.Accounts.forEach(account => {
-    accountNameLookup[account.Id] = account.Name;
-    accountCosts[account.Name] = {};
-  });
-
+const fetchAndProcessCosts = async costexplorer => {
   var date = new Date();
   var today = moment(date).add(1, "d");
   var startOfMonth = moment().startOf("month");
@@ -95,19 +88,24 @@ const addCosts = async (
   accountNameLookup,
   costexplorer
 ) => {
-  var monthToDateConfig = monthlyBlendedCostByAccountConfig(startDate, endDate);
-  var monthToDateResult = await costexplorer
-    .getCostAndUsage(monthToDateConfig)
-    .promise();
-  var monthToDateAggregate = getAggregatedCosts(
-    monthToDateResult,
-    accountNameLookup
-  );
-  Object.keys(monthToDateAggregate).forEach(accountName => {
-    costsObj[accountName][costName] = monthToDateAggregate[accountName];
-  });
-
-  console.log(costsObj);
+  try {
+    var monthToDateConfig = monthlyBlendedCostByAccountConfig(
+      startDate,
+      endDate
+    );
+    var monthToDateResult = await costexplorer
+      .getCostAndUsage(monthToDateConfig)
+      .promise();
+    var monthToDateAggregate = getAggregatedCosts(
+      monthToDateResult,
+      accountNameLookup
+    );
+    Object.keys(monthToDateAggregate).forEach(accountName => {
+      costsObj[accountName][costName] = monthToDateAggregate[accountName];
+    });
+  } catch (err) {
+    console.error("there was a problem gathering costs", err.message);
+  }
 };
 
 const monthlyBlendedCostByAccountConfig = (startDate, endDate) => {
@@ -185,7 +183,7 @@ const trimEmptyCosts = accountCosts => {
 const sendToSlack = async message => {
   try {
     await web.chat.postMessage({
-      channel: "gregtest",
+      channel: "aws-costs",
       text: message,
       icon_emoji: ":cat:",
       as_user: false,

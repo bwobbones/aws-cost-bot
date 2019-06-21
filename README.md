@@ -9,6 +9,7 @@ Requires a `environments.json` file in the root directory with a file in the for
   "awsKeys": [
     {
       "environment": "<aws environent name>",
+      "accountNumber: "<aws account number>",
       "accessKeyId": "<aws access key>",
       "secretAccessKey": "<aws secret key>"
     }

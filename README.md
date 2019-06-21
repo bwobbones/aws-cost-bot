@@ -2,7 +2,9 @@
 
 ## Pre-requisites
 
-Requires a `environments.json` file in the root directory with a file in the format
+The current code equires a `environments.json` file in an s3 bucket called `generalresourceful`, obviously change the bucket to somehthing appropriate for you.
+
+This is the structure of that file.
 
 ```
 {
@@ -21,6 +23,8 @@ Requires a `environments.json` file in the root directory with a file in the for
 Note that its an array, you can have multiple aws environments involved
 
 ## Execution
+
+Make sure you have your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables set before running
 
 ```
 npm install

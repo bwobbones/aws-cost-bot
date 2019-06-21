@@ -4,7 +4,7 @@
   "description": "Provides visiblity on AWS costs",
   "main": "index.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "amplify function invoke awscostbot"
   },
   "keywords": [
     "aws"

@@ -43,7 +43,6 @@ const getEnvironments = async () => {
     Key: "environments.json"
   };
   const environmentsFile = await client.getObject(params).promise();
-  console.log(environmentsFile.Body.toString());
   return JSON.parse(environmentsFile.Body.toString());
 };
 

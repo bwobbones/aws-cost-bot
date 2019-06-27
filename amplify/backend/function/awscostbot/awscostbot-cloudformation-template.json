@@ -57,10 +57,10 @@
 					]
 				},
 				"Runtime": "nodejs8.10",
-				"Timeout": "25",
+				"Timeout": "300",
 				"Code": {
 					"S3Bucket": "aws-cost-bot-20190621151027-deployment",
-					"S3Key": "amplify-builds/awscostbot-1561130822-latest-build.zip"
+					"S3Key": "amplify-builds/awscostbot-1561650215-latest-build.zip"
 				}
 			}
 		},
@@ -118,6 +118,13 @@
 				"PolicyDocument": {
 					"Version": "2012-10-17",
 					"Statement": [
+						{
+							"Effect": "Allow",
+							"Action": [
+								"s3:*"
+							],
+							"Resource": "*"
+						},
 						{
 							"Effect": "Allow",
 							"Action": [

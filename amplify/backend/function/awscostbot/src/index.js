@@ -17,6 +17,8 @@ var todaysConversionRate = 0;
 exports.handler = async (event, context) => {
   //eslint-disable-line
 
+  context.callbackWaitsForEmptyEventLoop = false;
+
   const environments = await getEnvironments();
   var awsCredentials = environments.awsKeys;
   const token = environments.slackKey;
@@ -29,7 +31,7 @@ exports.handler = async (event, context) => {
 
     var costs = await getCosts(cred.accessKeyId, cred.secretAccessKey);
   }
-  sendToSlack(generateSlackMessage(costs) + "\n\n", token);
+  await sendToSlack(generateSlackMessage(costs) + "\n\n", token);
   context.done(null, "All done");
 };
 
@@ -67,7 +69,6 @@ const getCosts = async (accessKeyId, secretAccessKey) => {
   var costexplorer = new AWS.CostExplorer(config);
 
   var costAggregate = await fetchAndProcessCosts(costexplorer);
-  trimEmptyCosts(costAggregate);
   return costAggregate;
 };
 
@@ -188,38 +189,18 @@ const getAggregatedCosts = (costData, accountNameLookup) => {
   return costPerAccount;
 };
 
-const trimEmptyCosts = accountCosts => {
-  var hasCost = false;
-  Object.keys(accountCosts).forEach(accountName => {
-    hasCost = false;
-    accountAggregate = accountCosts[accountName];
-    if (accountAggregate == null) {
-      if (accountAggregate === {}) {
-        delete accountCosts[accountName];
-      }
-      return;
-    }
-    Object.keys(accountAggregate).forEach(costType => {
-      if (accountAggregate[costType].Amount > 0) {
-        hasCost = true;
-      }
-    });
-    if (!hasCost) {
-      delete accountCosts[accountName];
-    }
-  });
-};
-
 const sendToSlack = async (message, token) => {
   try {
     const web = new WebClient(token);
-    await web.chat.postMessage({
+    console.log("Sending message to slack...");
+    return await web.chat.postMessage({
       channel: "aws-costs",
       text: message,
       icon_emoji: ":cat:",
       as_user: false,
       username: "CostBot"
     });
+    console.log("message sent.");
   } catch (err) {
     console.log(err);
   }

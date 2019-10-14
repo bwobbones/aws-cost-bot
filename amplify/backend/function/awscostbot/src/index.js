@@ -4,45 +4,53 @@ const axios = require("axios");
 const moment = require("moment");
 const { WebClient } = require("@slack/web-api");
 
-var accountNameLookup = [];
-var accountCosts = {};
+let accountNameLookup = [];
+let accountCosts = {};
 
 var todaysConversionRate = 0;
-
-// AWS.config.update({
-//   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-//   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-// });
 
 exports.handler = async (event, context) => {
   //eslint-disable-line
 
   context.callbackWaitsForEmptyEventLoop = false;
 
-  const environments = await getEnvironments();
-  var awsCredentials = environments.awsKeys;
-  const token = environments.slackKey;
-  await getTodaysConversionRate();
-  for (var i = 0; i < awsCredentials.length; i++) {
-    var cred = awsCredentials[i];
-    console.log("processing", cred.environment, "...");
-    accountNameLookup[cred.accountNumber] = cred.environment;
-    accountCosts[cred.environment] = {};
+  const environmentFiles = [
+    "rsfl-environments.json",
+    "stockphoto-environments.json"
+  ];
 
-    var costs = await getCosts(cred.accessKeyId, cred.secretAccessKey);
+  for (const envFile of environmentFiles) {
+    accountNameLookup = [];
+    accountCosts = {};
+    const environments = await getEnvironments(envFile);
+    var awsCredentials = environments.awsKeys;
+    const token = environments.slackKey;
+    await getTodaysConversionRate();
+    for (var i = 0; i < awsCredentials.length; i++) {
+      var cred = awsCredentials[i];
+      console.log("processing", cred.environment, "...");
+      accountNameLookup[cred.accountNumber] = cred.environment;
+      accountCosts[cred.environment] = {};
+
+      var costs = await getCosts(cred.accessKeyId, cred.secretAccessKey);
+    }
+    await sendToSlack(
+      generateSlackMessage(costs) + "\n\n",
+      environments.slackChannel,
+      token
+    );
   }
-  await sendToSlack(generateSlackMessage(costs) + "\n\n", token);
   context.done(null, "All done");
 };
 
-const getEnvironments = async () => {
+const getEnvironments = async envFile => {
   const client = new S3({
     apiVersion: "2006-03-01"
   });
 
   const params = {
     Bucket: "generalresourceful",
-    Key: "environments.json"
+    Key: envFile
   };
   const environmentsFile = await client.getObject(params).promise();
   return JSON.parse(environmentsFile.Body.toString());
@@ -189,18 +197,17 @@ const getAggregatedCosts = (costData, accountNameLookup) => {
   return costPerAccount;
 };
 
-const sendToSlack = async (message, token) => {
+const sendToSlack = async (message, channel, token) => {
   try {
     const web = new WebClient(token);
     console.log("Sending message to slack...");
     return await web.chat.postMessage({
-      channel: "aws-costs",
+      channel: channel,
       text: message,
       icon_emoji: ":cat:",
       as_user: false,
       username: "CostBot"
     });
-    console.log("message sent.");
   } catch (err) {
     console.log(err);
   }
@@ -208,7 +215,8 @@ const sendToSlack = async (message, token) => {
 
 const generateSlackMessage = accountCosts => {
   var accountAggregate;
-  var message = "";
+  var message =
+    "*Today's conversion rate:* 1 USD = " + todaysConversionRate + " AUD\n";
   Object.keys(accountCosts).forEach(accountName => {
     accountAggregate = accountCosts[accountName];
     if (accountAggregate == null) {

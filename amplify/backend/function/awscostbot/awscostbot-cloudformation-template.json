@@ -60,7 +60,7 @@
 				"Timeout": "300",
 				"Code": {
 					"S3Bucket": "aws-cost-bot-20190621151027-deployment",
-					"S3Key": "amplify-builds/awscostbot-1561650215-latest-build.zip"
+					"S3Key": "amplify-builds/awscostbot-6f493950384534666135-build.zip"
 				}
 			}
 		},

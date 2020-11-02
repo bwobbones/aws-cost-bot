@@ -2,7 +2,7 @@
 
 ## Pre-requisites
 
-The current code equires a `environments.json` file in an s3 bucket called `generalresourceful`, obviously change the bucket to somehthing appropriate for you.
+The current code requires a `environments.json` file in an s3 bucket called `generalresourceful`, obviously change the bucket to somehthing appropriate for you.
 
 This is the structure of that file.
 

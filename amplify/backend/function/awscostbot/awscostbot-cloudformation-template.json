@@ -56,7 +56,7 @@
 						"Arn"
 					]
 				},
-				"Runtime": "nodejs8.10",
+				"Runtime": "nodejs10.x",
 				"Timeout": "300",
 				"Code": {
 					"S3Bucket": "aws-cost-bot-20190621151027-deployment",

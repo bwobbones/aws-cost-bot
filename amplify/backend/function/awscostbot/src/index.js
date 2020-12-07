@@ -224,9 +224,10 @@ const generateSlackMessage = accountCosts => {
     }
     message += `*${accountName}*\n`;
     Object.keys(accountAggregate).forEach(costType => {
-      message += `${costType}: ${(
-        accountAggregate[costType].Amount * todaysConversionRate
-      ).toFixed(2)} AUD\n`;
+      const amount = accountAggregate[costType].Amount;
+      const usdAmount = amount.toFixed(2);
+      const audAmount = (amount * todaysConversionRate).toFixed(2);
+      message += `${costType}: ${usdAmount} USD = ${audAmount} AUD\n`;
     });
   });
   return message;

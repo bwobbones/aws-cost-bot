@@ -57,9 +57,9 @@ const getEnvironments = async envFile => {
 
 const getTodaysConversionRate = async () => {
   console.log("gathering exchange rates...");
-  // https://ratesapi.io/
+  // https://exchangerate.host
   const todaysRates = await axios.get(
-    "https://api.ratesapi.io/api/latest?base=USD&symbols=AUD"
+    "https://api.exchangerate.host/latest?base=USD&symbols=AUD"
   );
   console.log("todays rate", todaysRates.data.rates.AUD);
   return todaysRates.data.rates.AUD;

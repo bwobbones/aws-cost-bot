@@ -7,12 +7,12 @@ const { WebClient } = require("@slack/web-api");
 let accountNameLookup = [];
 let accountCosts = {};
 
-var todaysConversionRate = 0;
-
 exports.handler = async (event, context) => {
   //eslint-disable-line
 
   context.callbackWaitsForEmptyEventLoop = false;
+
+  const todaysConversionRate = await tryGetTodaysConversionRate();
 
   const environmentFiles = [
     "rsfl-environments.json",
@@ -25,7 +25,6 @@ exports.handler = async (event, context) => {
     const environments = await getEnvironments(envFile);
     var awsCredentials = environments.awsKeys;
     const token = environments.slackKey;
-    await getTodaysConversionRate();
     for (var i = 0; i < awsCredentials.length; i++) {
       var cred = awsCredentials[i];
       console.log("processing", cred.environment, "...");
@@ -35,7 +34,7 @@ exports.handler = async (event, context) => {
       var costs = await getCosts(cred.accessKeyId, cred.secretAccessKey);
     }
     await sendToSlack(
-      generateSlackMessage(costs) + "\n\n",
+      generateSlackMessage(costs, todaysConversionRate) + "\n\n",
       environments.slackChannel,
       token
     );
@@ -63,9 +62,17 @@ const getTodaysConversionRate = async () => {
     "https://api.ratesapi.io/api/latest?base=USD&symbols=AUD"
   );
   console.log("todays rate", todaysRates.data.rates.AUD);
-  todaysConversionRate = todaysRates.data.rates.AUD;
-  return todaysRates;
+  return todaysRates.data.rates.AUD;
 };
+
+const tryGetTodaysConversionRate = async () => {
+  try {
+    return await getTodaysConversionRate()
+  } catch (e) {
+    console.warn(e)
+    return null
+  }
+}
 
 const getCosts = async (accessKeyId, secretAccessKey) => {
   var config = {
@@ -214,12 +221,14 @@ const sendToSlack = async (message, channel, token) => {
   }
 };
 
-const generateSlackMessage = accountCosts => {
-  var accountAggregate;
-  var message =
-    "*Today's conversion rate:* 1 USD = " + todaysConversionRate + " AUD\n";
+const generateSlackMessage = (accountCosts, todaysConversionRate) => {
+  let message = "";
+  if (todaysConversionRate) {
+    message +=
+      "*Today's conversion rate:* 1 USD = " + todaysConversionRate + " AUD\n";
+  }
   Object.keys(accountCosts).forEach(accountName => {
-    accountAggregate = accountCosts[accountName];
+    const accountAggregate = accountCosts[accountName];
     if (accountAggregate == null) {
       return;
     }
@@ -227,8 +236,12 @@ const generateSlackMessage = accountCosts => {
     Object.keys(accountAggregate).forEach(costType => {
       const amount = accountAggregate[costType].Amount;
       const usdAmount = amount.toFixed(2);
-      const audAmount = (amount * todaysConversionRate).toFixed(2);
-      message += `${costType}: ${usdAmount} USD = ${audAmount} AUD\n`;
+      message += `${costType}: ${usdAmount} USD`;
+      if (todaysConversionRate) {
+        const audAmount = (amount * todaysConversionRate).toFixed(2);
+        message += ` = ${audAmount} AUD`;
+      }
+      message += "\n";
     });
   });
   return message;

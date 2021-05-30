@@ -2,7 +2,7 @@
 
 ## Pre-requisites
 
-The current code requires a `environments.json` file in an s3 bucket called `generalresourceful`, obviously change the bucket to somehthing appropriate for you.
+The current code requires a `environments.json` file in an s3 bucket called `generalresourceful`, obviously change the bucket to something appropriate for you.
 
 This is the structure of that file.
 
@@ -29,4 +29,12 @@ Make sure you have your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment 
 ```
 npm install
 npm start
+```
+
+## Deployment
+
+Make sure you have your AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_REGION environment variables set before running
+
+```
+npm run deploy
 ```

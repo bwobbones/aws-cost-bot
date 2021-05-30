@@ -33,11 +33,12 @@ exports.handler = async (event, context) => {
 
       var costs = await getCosts(cred.accessKeyId, cred.secretAccessKey);
     }
-    await sendToSlack(
-      generateSlackMessage(costs, todaysConversionRate) + "\n\n",
-      environments.slackChannel,
-      token
-    );
+    const message = generateSlackMessage(costs, todaysConversionRate) + "\n\n";
+    if ((process.env.DRY_RUN || "").toLowerCase() === "true") {
+      console.log({ message, channel: environments.slackChannel, token });
+    } else {
+      await sendToSlack(message, environments.slackChannel, token);
+    }
   }
   context.done(null, "All done");
 };
@@ -246,3 +247,15 @@ const generateSlackMessage = (accountCosts, todaysConversionRate) => {
   });
   return message;
 };
+
+if (require.main === module) {
+  process.env.DRY_RUN = process.env.DRY_RUN || "true"
+
+  const event = {};
+  const context = {
+    done: (...args) => {
+      console.log(`context.done(${args.map((arg) => String(arg)).join(", ")})`);
+    },
+  };
+  exports.handler(event, context).catch((e) => console.error(e));
+}

@@ -1,10 +1,12 @@
 {
-  "name": "aws-cost",
+  "name": "awscostbot",
   "version": "1.0.0",
   "description": "Provides visiblity on AWS costs",
   "main": "index.js",
   "scripts": {
-    "start": "amplify function invoke awscostbot"
+    "start": "npm start --prefix lambda",
+    "postinstall": "npm install --prefix lambda && npm install --prefix infra",
+    "deploy": "npm ci --prod --prefix lambda && npm ci --prefix infra && npm run --prefix infra bootstrap && npm run --prefix infra cdk -- deploy"
   },
   "keywords": [
     "aws"

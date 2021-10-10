@@ -3,6 +3,7 @@ const S3 = require("aws-sdk/clients/s3");
 const axios = require("axios");
 const moment = require("moment");
 const { WebClient } = require("@slack/web-api");
+const { Client, Intents } = require("discord.js");
 
 let accountNameLookup = [];
 let accountCosts = {};
@@ -33,11 +34,12 @@ exports.handler = async (event, context) => {
 
       var costs = await getCosts(cred.accessKeyId, cred.secretAccessKey);
     }
-    const message = generateSlackMessage(costs, todaysConversionRate) + "\n\n";
+    const message = generateMessage(costs, todaysConversionRate) + "\n\n";
     if ((process.env.DRY_RUN || "").toLowerCase() === "true") {
       console.log({ message, channel: environments.slackChannel, token });
     } else {
       await sendToSlack(message, environments.slackChannel, token);
+      await sendToDiscord(message, environments.discordChannel);
     }
   }
   context.done(null, "All done");
@@ -68,12 +70,12 @@ const getTodaysConversionRate = async () => {
 
 const tryGetTodaysConversionRate = async () => {
   try {
-    return await getTodaysConversionRate()
+    return await getTodaysConversionRate();
   } catch (e) {
-    console.warn(e)
-    return null
+    console.warn(e);
+    return null;
   }
-}
+};
 
 const getCosts = async (accessKeyId, secretAccessKey) => {
   var config = {
@@ -152,7 +154,11 @@ const addCosts = async (
       costsObj[accountName][costName] = monthToDateAggregate[accountName];
     });
   } catch (err) {
-    console.error("there was a problem gathering costs", err.message);
+    console.error(
+      "there was a problem gathering costs",
+      err.message,
+      err.stack
+    );
   }
 };
 
@@ -222,7 +228,27 @@ const sendToSlack = async (message, channel, token) => {
   }
 };
 
-const generateSlackMessage = (accountCosts, todaysConversionRate) => {
+const sendToDiscord = async (message, channel, token) => {
+  try {
+    const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+
+    client.once("ready", () => {
+      client.channels.fetch(channel).then(channel => {
+        channel.send(message).then(res => {
+          console.log("message sent.");
+          client.destroy();
+        });
+      });
+    });
+
+    // Log our bot in
+    client.login(process.env.DISCORD_BACKUP_SECRET);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const generateMessage = (accountCosts, todaysConversionRate) => {
   let message = "";
   if (todaysConversionRate) {
     message +=
@@ -249,13 +275,13 @@ const generateSlackMessage = (accountCosts, todaysConversionRate) => {
 };
 
 if (require.main === module) {
-  process.env.DRY_RUN = process.env.DRY_RUN || "true"
+  process.env.DRY_RUN = process.env.DRY_RUN || "true";
 
   const event = {};
   const context = {
     done: (...args) => {
-      console.log(`context.done(${args.map((arg) => String(arg)).join(", ")})`);
-    },
+      console.log(`context.done(${args.map(arg => String(arg)).join(", ")})`);
+    }
   };
-  exports.handler(event, context).catch((e) => console.error(e));
+  exports.handler(event, context).catch(e => console.error(e));
 }

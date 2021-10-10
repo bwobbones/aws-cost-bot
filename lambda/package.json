@@ -13,6 +13,7 @@
     "aws-sdk": "2.783.0",
     "axios": "0.21.1",
     "js-currency-converter": "2.0.0",
-    "request": "2.88.2"
+    "request": "2.88.2",
+    "discord.js": "12.5.3"
   }
 }

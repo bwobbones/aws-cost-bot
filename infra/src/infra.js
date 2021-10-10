@@ -6,6 +6,7 @@ const iam = require("@aws-cdk/aws-iam");
 const lambda = require("@aws-cdk/aws-lambda");
 const logs = require("@aws-cdk/aws-logs");
 const cdk = require("@aws-cdk/core");
+const secretsManager = require("@aws-cdk/aws-secretsmanager");
 const path = require("path");
 
 class AwsCostBotStack extends cdk.Stack {
@@ -16,8 +17,14 @@ class AwsCostBotStack extends cdk.Stack {
   constructor(scope, id) {
     super(scope, id, {
       stackName: "aws-cost-bot",
-      description: "AWS Cost Bot deployed by AWS CDK",
+      description: "AWS Cost Bot deployed by AWS CDK"
     });
+
+    const discordBackupSecret = secretsManager.Secret.fromSecretNameV2(
+      this,
+      "discord-backup-secret",
+      "discordBackupSecret"
+    );
 
     // Lambda function
     const functionName = "aws-cost-bot";
@@ -28,20 +35,21 @@ class AwsCostBotStack extends cdk.Stack {
       code: lambda.Code.fromAsset(path.join(__dirname, "..", "..", "lambda")),
       environment: {
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+        DISCORD_BACKUP_SECRET: discordBackupSecret.secretValue.toString()
       },
       logRetention: logs.RetentionDays.ONE_MONTH,
-      timeout: cdk.Duration.minutes(5),
+      timeout: cdk.Duration.minutes(5)
     });
     lambdaFunction.addToRolePolicy(
       new iam.PolicyStatement({
         actions: [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents",
+          "logs:PutLogEvents"
         ],
         resources: [
-          `arn:aws:logs:${this.region}:${this.account}:log-group:/aws/lambda/${functionName}:log-stream:*`,
-        ],
+          `arn:aws:logs:${this.region}:${this.account}:log-group:/aws/lambda/${functionName}:log-stream:*`
+        ]
       })
     );
 
@@ -52,8 +60,8 @@ class AwsCostBotStack extends cdk.Stack {
         actions: ["s3:GetObject", "s3:ListBucket"],
         resources: [
           `arn:aws:s3:::${s3BucketName}`,
-          `arn:aws:s3:::${s3BucketName}/*`,
-        ],
+          `arn:aws:s3:::${s3BucketName}/*`
+        ]
       })
     );
 
@@ -62,7 +70,7 @@ class AwsCostBotStack extends cdk.Stack {
       schedule: events.Schedule.rate(cdk.Duration.days(1)),
       targets: [new targets.LambdaFunction(lambdaFunction)],
       ruleName: "aws-cost-bot",
-      description: "Run the AWS Cost Bot daily",
+      description: "Run the AWS Cost Bot daily"
     });
   }
 }

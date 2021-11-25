@@ -36,5 +36,7 @@ npm start
 Make sure you have your AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_REGION environment variables set before running
 
 ```
+npm install
+npm run bootstrap
 npm run deploy
 ```

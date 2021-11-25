@@ -1,5 +1,5 @@
 {
-  "app": "node src/infra.js",
+  "app": "./node_modules/.bin/ts-node --prefer-ts-exts bin/app.ts",
   "context": {
     "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": true,
     "@aws-cdk/core:enableStackNameDuplicates": "true",

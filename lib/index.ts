@@ -5,7 +5,6 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as lambdaNodejs from "@aws-cdk/aws-lambda-nodejs";
 import * as logs from "@aws-cdk/aws-logs";
 import * as cdk from "@aws-cdk/core";
-import * as secretsManager from "@aws-cdk/aws-secretsmanager";
 
 export class AwsCostBot extends cdk.Construct {
   public readonly lambdaFunction: lambdaNodejs.NodejsFunction;
@@ -13,34 +12,18 @@ export class AwsCostBot extends cdk.Construct {
   constructor(scope: cdk.Construct, id: string) {
     super(scope, id);
 
-    const discordBackupSecret = secretsManager.Secret.fromSecretNameV2(
-      this,
-      "discord-backup-secret",
-      "discordBackupSecret"
-    );
-
     // Lambda function bundled using esbuild
     this.lambdaFunction = new lambdaNodejs.NodejsFunction(this, "lambda", {
       functionName: "aws-cost-bot",
       runtime: lambda.Runtime.NODEJS_14_X,
       environment: {
-        DISCORD_BACKUP_SECRET: discordBackupSecret.secretValue.toString(),
         NODE_OPTIONS: "--enable-source-maps"
       },
       logRetention: logs.RetentionDays.ONE_MONTH,
       timeout: cdk.Duration.minutes(5),
       bundling: {
         sourceMap: true,
-        target: "es2020",
-        // Dependencies to exclude from the build
-        externalModules: [
-          "aws-sdk", // already available in the lambda runtime
-          "ffmpeg-static" // dependency of discord.js that isn't used at runtime
-        ],
-        // Dependencies to deploy from node_modules instead of bundling
-        nodeModules: [
-          "discord.js" // contains non-analyzable imports https://github.com/discordjs/discord.js/issues/7032
-        ]
+        target: "es2020"
       }
     });
 

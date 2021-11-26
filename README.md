@@ -10,13 +10,15 @@ This is the structure of that file.
 {
   "awsKeys": [
     {
-      "environment": "<aws environent name>",
+      "environment": "<aws environment name>",
       "accountNumber: "<aws account number>",
       "accessKeyId": "<aws access key>",
       "secretAccessKey": "<aws secret key>"
     }
   ],
-  "slackKey": "<slack boy key>"
+  "slackChannel": "<slack channel>",
+  "slackKey": "<slack bot key>",
+  "discordWebhook": "<discord webhook URL>"
 }
 ```
 

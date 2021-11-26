@@ -8,7 +8,11 @@ class AwsCostBotStack extends cdk.Stack {
       description: "https://github.com/bwobbones/aws-cost-bot"
     });
 
-    new AwsCostBot(this, "AwsCostBot");
+    new AwsCostBot(this, "AwsCostBot", {
+      configFile:
+        process.env.CONFIG_FILE ||
+        "arn:aws:s3:::generalresourceful/rsfl-environments.json"
+    });
   }
 }
 

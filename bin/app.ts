@@ -9,12 +9,12 @@ class AwsCostBotStack extends cdk.Stack {
     });
 
     new AwsCostBot(this, "AwsCostBot", {
-      configFile:
-        process.env.CONFIG_FILE ||
-        "arn:aws:s3:::generalresourceful/rsfl-environments.json"
+      configFile: process.env.CONFIG_FILE || ""
     });
   }
 }
 
-const app = new cdk.App();
-new AwsCostBotStack(app, "AwsCostBotStack");
+if (!process.env.npm_lifecycle_script?.includes('cdk "bootstrap"')) {
+  const app = new cdk.App();
+  new AwsCostBotStack(app, "AwsCostBotStack");
+}

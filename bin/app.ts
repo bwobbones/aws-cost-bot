@@ -8,9 +8,13 @@ class AwsCostBotStack extends cdk.Stack {
       description: "https://github.com/bwobbones/aws-cost-bot"
     });
 
-    new AwsCostBot(this, "AwsCostBot");
+    new AwsCostBot(this, "AwsCostBot", {
+      configFile: process.env.CONFIG_FILE || ""
+    });
   }
 }
 
-const app = new cdk.App();
-new AwsCostBotStack(app, "AwsCostBotStack");
+if (!process.env.npm_lifecycle_script?.includes('cdk "bootstrap"')) {
+  const app = new cdk.App();
+  new AwsCostBotStack(app, "AwsCostBotStack");
+}

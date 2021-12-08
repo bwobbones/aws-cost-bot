@@ -1,10 +1,15 @@
-import * as events from "@aws-cdk/aws-events";
-import * as targets from "@aws-cdk/aws-events-targets";
-import * as iam from "@aws-cdk/aws-iam";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as lambdaNodejs from "@aws-cdk/aws-lambda-nodejs";
-import * as logs from "@aws-cdk/aws-logs";
-import * as cdk from "@aws-cdk/core";
+import { Construct } from "constructs";
+import {
+  Duration,
+  Fn,
+  Token,
+  aws_events,
+  aws_events_targets,
+  aws_iam,
+  aws_lambda,
+  aws_lambda_nodejs,
+  aws_logs
+} from "aws-cdk-lib";
 
 /**
  * @summary The properties for the AwsCostBot class.
@@ -21,10 +26,10 @@ export interface AwsSnsToDiscordProps {
 /**
  * @summary The AwsCostBot class.
  */
-export class AwsCostBot extends cdk.Construct {
-  public readonly lambdaFunction: lambdaNodejs.NodejsFunction;
+export class AwsCostBot extends Construct {
+  public readonly lambdaFunction: aws_lambda_nodejs.NodejsFunction;
 
-  constructor(scope: cdk.Construct, id: string, props: AwsSnsToDiscordProps) {
+  constructor(scope: Construct, id: string, props: AwsSnsToDiscordProps) {
     super(scope, id);
 
     // Validation
@@ -32,7 +37,7 @@ export class AwsCostBot extends cdk.Construct {
       throw new Error(`The configFile prop is required`);
     }
     if (
-      !cdk.Token.isUnresolved(props.configFile) &&
+      !Token.isUnresolved(props.configFile) &&
       !props.configFile.startsWith("arn:aws:s3:::")
     ) {
       throw new Error(
@@ -41,15 +46,15 @@ export class AwsCostBot extends cdk.Construct {
     }
 
     // Lambda function bundled using esbuild
-    this.lambdaFunction = new lambdaNodejs.NodejsFunction(this, "lambda", {
+    this.lambdaFunction = new aws_lambda_nodejs.NodejsFunction(this, "lambda", {
       functionName: "aws-cost-bot",
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: aws_lambda.Runtime.NODEJS_14_X,
       environment: {
         CONFIG_FILE: props.configFile,
         NODE_OPTIONS: "--enable-source-maps"
       },
-      logRetention: logs.RetentionDays.ONE_MONTH,
-      timeout: cdk.Duration.minutes(5),
+      logRetention: aws_logs.RetentionDays.ONE_MONTH,
+      timeout: Duration.minutes(5),
       bundling: {
         sourceMap: true,
         target: "es2020"
@@ -58,7 +63,7 @@ export class AwsCostBot extends cdk.Construct {
 
     // Read-only access to the config file in S3
     this.lambdaFunction.addToRolePolicy(
-      new iam.PolicyStatement({
+      new aws_iam.PolicyStatement({
         actions: ["s3:GetObject"],
         resources: [
           // S3 object keys can contain any UTF-8 character, including IAM special characters
@@ -68,9 +73,9 @@ export class AwsCostBot extends cdk.Construct {
     );
 
     // Cloudwatch rule to trigger the lambda daily
-    new events.Rule(this, "awscostbot-rule", {
-      schedule: events.Schedule.rate(cdk.Duration.days(1)),
-      targets: [new targets.LambdaFunction(this.lambdaFunction)],
+    new aws_events.Rule(this, "awscostbot-rule", {
+      schedule: aws_events.Schedule.rate(Duration.days(1)),
+      targets: [new aws_events_targets.LambdaFunction(this.lambdaFunction)],
       ruleName: "aws-cost-bot",
       description: "Run the AWS Cost Bot daily"
     });
@@ -80,17 +85,17 @@ export class AwsCostBot extends cdk.Construct {
   // https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_variables.html#policy-vars-specialchars
   private convertArnToIamResource(arn: string): string {
     if (
-      !cdk.Token.isUnresolved(arn) &&
+      !Token.isUnresolved(arn) &&
       IAM_SPECIAL_CHARACTERS.every(c => !arn.includes(c))
     ) {
       return arn; // No special characters
     }
-    let resource = cdk.Token.asString(cdk.Token.asAny(arn)); // cdk.Fn.split requires a token
+    let resource = Token.asString(Token.asAny(arn)); // Fn.split requires a token
     for (const specialCharacter of IAM_SPECIAL_CHARACTERS) {
       // Escape all occurrences of the special character (find and replace)
-      resource = cdk.Fn.join(
+      resource = Fn.join(
         "${" + specialCharacter + "}",
-        cdk.Fn.split(specialCharacter, resource)
+        Fn.split(specialCharacter, resource)
       );
     }
     return resource;

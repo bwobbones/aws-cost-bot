@@ -1,9 +1,10 @@
-import * as cdk from "@aws-cdk/core";
+import { Construct } from "constructs";
+import { App, Stack } from "aws-cdk-lib";
 
 import { AwsCostBot } from "../lib";
 
-class AwsCostBotStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string) {
+class AwsCostBotStack extends Stack {
+  constructor(scope: Construct, id: string) {
     super(scope, id, {
       description: "https://github.com/bwobbones/aws-cost-bot"
     });
@@ -15,6 +16,6 @@ class AwsCostBotStack extends cdk.Stack {
 }
 
 if (!process.env.npm_lifecycle_script?.includes('cdk "bootstrap"')) {
-  const app = new cdk.App();
+  const app = new App();
   new AwsCostBotStack(app, "AwsCostBotStack");
 }

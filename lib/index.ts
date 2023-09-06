@@ -48,7 +48,7 @@ export class AwsCostBot extends Construct {
     // Lambda function bundled using esbuild
     this.lambdaFunction = new aws_lambda_nodejs.NodejsFunction(this, "lambda", {
       functionName: "aws-cost-bot",
-      runtime: aws_lambda.Runtime.NODEJS_14_X,
+      runtime: aws_lambda.Runtime.NODEJS_18_X,
       environment: {
         CONFIG_FILE: props.configFile,
         NODE_OPTIONS: "--enable-source-maps"
@@ -57,7 +57,7 @@ export class AwsCostBot extends Construct {
       timeout: Duration.minutes(5),
       bundling: {
         sourceMap: true,
-        target: "es2020"
+        target: "es2021"
       }
     });
 

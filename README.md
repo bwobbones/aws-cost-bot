@@ -19,6 +19,7 @@
      "slackChannel": "<slack channel>",
      "slackKey": "<slack bot key>",
      "discordWebhook": "<discord webhook URL>"
+     "exchangeApiKey": "<api key from https://exchangerate.host>",
    }
    ```
 

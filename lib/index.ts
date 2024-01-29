@@ -46,14 +46,18 @@ export class AwsCostBot extends Construct {
     }
 
     // Lambda function bundled using esbuild
+    const functionName = "aws-cost-bot";
     this.lambdaFunction = new aws_lambda_nodejs.NodejsFunction(this, "lambda", {
-      functionName: "aws-cost-bot",
+      functionName,
       runtime: aws_lambda.Runtime.NODEJS_18_X,
       environment: {
         CONFIG_FILE: props.configFile,
         NODE_OPTIONS: "--enable-source-maps"
       },
-      logRetention: aws_logs.RetentionDays.ONE_MONTH,
+      logGroup: new aws_logs.LogGroup(this, "lambda-logGroup", {
+        logGroupName: `/aws/lambda/${functionName}`,
+        retention: aws_logs.RetentionDays.ONE_MONTH
+      }),
       timeout: Duration.minutes(5),
       bundling: {
         sourceMap: true,

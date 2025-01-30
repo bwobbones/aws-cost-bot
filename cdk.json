@@ -1,6 +1,7 @@
 {
   "app": "./node_modules/.bin/ts-node --prefer-ts-exts bin/app.ts",
   "context": {
+    "@aws-cdk/aws-iam:oidcRejectUnauthorizedConnections": true,
     "@aws-cdk/core:newStyleStackSynthesis": false
   }
 }

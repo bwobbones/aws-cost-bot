@@ -49,7 +49,7 @@ export class AwsCostBot extends Construct {
     const functionName = "aws-cost-bot";
     this.lambdaFunction = new aws_lambda_nodejs.NodejsFunction(this, "lambda", {
       functionName,
-      runtime: aws_lambda.Runtime.NODEJS_20_X,
+      runtime: aws_lambda.Runtime.NODEJS_24_X,
       environment: {
         CONFIG_FILE: props.configFile,
         NODE_OPTIONS: "--enable-source-maps"
@@ -61,7 +61,7 @@ export class AwsCostBot extends Construct {
       timeout: Duration.minutes(5),
       bundling: {
         sourceMap: true,
-        target: "es2022"
+        target: "es2024"
       }
     });
 

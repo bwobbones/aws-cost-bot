@@ -19,19 +19,19 @@
     "@aws-sdk/client-cost-explorer": "3.405.0",
     "@aws-sdk/client-s3": "3.405.0",
     "@slack/web-api": "6.10.0",
-    "aws-cdk-lib": "2.206.0",
+    "aws-cdk-lib": "2.232.1",
     "axios": "1.12.1",
-    "constructs": "10.4.2",
+    "constructs": "10.4.3",
     "moment": "2.29.4"
   },
   "devDependencies": {
-    "@types/node": "20.11.10",
-    "aws-cdk": "2.1021.0",
+    "@types/node": "24.10.2",
+    "aws-cdk": "2.1033.0",
     "esbuild": "0.25.0",
     "ts-node": "10.9.2",
-    "typescript": "5.3.3"
+    "typescript": "5.9.3"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   }
 }

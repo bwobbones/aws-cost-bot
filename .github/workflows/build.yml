@@ -20,8 +20,4 @@ jobs:
           node-version: 24.x
           cache: "npm"
 
-      - run: npm ci
-
-      - run: npm run lint
-
-      - run: CONFIG_FILE=arn:aws:s3:::bucket/key npm run cdk -- synth
+      - run: node --run check

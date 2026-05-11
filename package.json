@@ -7,8 +7,10 @@
     "start": "node bin/start.js",
     "cdk": "cdk",
     "bootstrap": "cdk bootstrap",
-    "deploy": "npm run lint && cdk deploy",
-    "lint": "tsc --noEmit"
+    "deploy": "node --run check && cdk deploy",
+    "check": "npm ci --no-audit --no-fund && npx run-s \"check:**\"",
+    "check:types": "tsc --noEmit",
+    "check:cdk": "cross-env CONFIG_FILE=arn:aws:s3:::bucket/key cdk synth"
   },
   "keywords": [
     "aws"
@@ -27,7 +29,9 @@
   "devDependencies": {
     "@types/node": "24.10.2",
     "aws-cdk": "2.1118.0",
+    "cross-env": "10.1.0",
     "esbuild": "0.25.0",
+    "npm-run-all2": "8.0.4",
     "ts-node": "10.9.2",
     "typescript": "5.9.3"
   },

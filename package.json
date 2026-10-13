@@ -21,14 +21,14 @@
     "@aws-sdk/client-cost-explorer": "3.988.0",
     "@aws-sdk/client-s3": "3.988.0",
     "@slack/web-api": "6.10.0",
-    "aws-cdk-lib": "2.260.0",
+    "aws-cdk-lib": "2.273.0",
     "axios": "1.20.0",
-    "constructs": "10.6.0",
+    "constructs": "10.8.1",
     "moment": "2.31.0"
   },
   "devDependencies": {
     "@types/node": "24.10.2",
-    "aws-cdk": "2.1126.0",
+    "aws-cdk": "2.1145.0",
     "cross-env": "10.1.0",
     "esbuild": "0.28.1",
     "npm-run-all2": "8.0.4",
